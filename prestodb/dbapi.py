@@ -33,6 +33,7 @@ __all__ = ['connect', 'Connection', 'Cursor']
 
 apilevel = '2.0'
 threadsafety = 2
+paramstyle = 'pyformat'
 
 logger = logging.getLogger(__name__)
 
@@ -181,10 +182,13 @@ class Cursor(object):
         An Error (or subclass) exception is raised if the previous call to
         .execute*() did not produce any result set or no call was issued yet.
         """
+        if self._rows == None:
+            self._rows = iter(self._query.result)
 
         try:
-            return next(self._query.result)
+            return next(self._rows)
         except StopIteration:
+            self._rows = None
             return None
         except prestodb.exceptions.HttpError as err:
             raise OperationalError(str(err))
@@ -229,3 +233,7 @@ class Cursor(object):
     def fetchall(self):
         # type: () -> List[List[Any]]
         return list(self.genall())
+
+    def close(self):
+        #TODO do nothing
+        pass
